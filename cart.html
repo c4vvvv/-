@@ -49,6 +49,10 @@
       width: 90%;
       resize: vertical;
     }
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
   </style>
 </head>
 <body>
@@ -61,7 +65,8 @@
         <th>商品名稱</th>
         <th>數量</th>
         <th>小計</th>
-        <th>備註 / 刪除</th>
+        <th>備註</th>
+        <th>刪除</th>
         <th>用餐方式</th>
       </tr>
     </thead>
@@ -117,7 +122,9 @@
           </td>
           <td>${subtotal} 元</td>
           <td>
-            <textarea rows="2" placeholder="例如：冰淇淋加在布朗尼上" onchange="updateNote('${name}', this.value)">${item.note}</textarea><br/>
+            <textarea rows="2" placeholder="例如：冰淇淋加在布朗尼上" onchange="updateNote('${name}', this.value)">${item.note}</textarea>
+          </td>
+          <td>
             <button class="btn-delete" onclick="removeItem('${name}')">刪除</button>
           </td>
           <td>
