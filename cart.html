@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>購物車內容</title>
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      padding: 2rem;
+      background-color: #fffaf2;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.8rem;
+      text-align: center;
+    }
+    th {
+      background-color: #f0e8dd;
+    }
+    button {
+      padding: 0.3rem 0.6rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-minus, .btn-plus {
+      background-color: #e8ded1;
+    }
+    .btn-delete {
+      background-color: #d88;
+      color: white;
+    }
+    .checkout-btn {
+      margin-top: 2rem;
+      padding: 0.8rem 1.5rem;
+      font-size: 1.1rem;
+      background-color: #a58b6f;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛒 購物車內容</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>商品名稱</th>
+        <th>數量</th>
+        <th>小計</th>
+        <th>修改</th>
+      </tr>
+    </thead>
+    <tbody id="cart-items">
+      <!-- JavaScript 插入 -->
+    </tbody>
+  </table>
+
+  <div id="total-amount" style="margin-top:1rem; font-weight:bold;"></div>
+
+  <button class="checkout-btn" onclick="checkout()">請至櫃台結帳</button>
+
+  <script>
+    const priceMap = {
+      '提拉米蘇': 150,
+      '布朗尼': 110,
+      '鮮奶茶': 80,
+      '加點冰淇淋': 30
+    };
+
+    let cart = JSON.parse(localStorage.getItem('cart')) || {};
+
+    const tbody = document.getElementById('cart-items');
+    const totalDisplay = document.getElementById('total-amount');
+
+    function renderCart() {
+      tbody.innerHTML = '';
+      let total = 0;
+
+      for (const name in cart) {
+        const qty = cart[name];
+        const price = priceMap[name] || 0;
+        const subtotal = qty * price;
+        total += subtotal;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${name}</td>
+          <td>
+            <button class="btn-minus" onclick="updateQty('${name}', -1)">-</button>
+            ${qty}
+            <button class="btn-plus" onclick="updateQty('${name}', 1)">+</button>
+          </td>
+          <td>${subtotal} 元</td>
+          <td>
+            <button class="btn-delete" onclick="removeItem('${name}')">刪除</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      totalDisplay.innerText = `總計：${total} 元`;
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function updateQty(name, change) {
+      if (!cart[name]) return;
+      cart[name] += change;
+      if (cart[name] <= 0) delete cart[name];
+      renderCart();
+    }
+
+    function removeItem(name) {
+      delete cart[name];
+      renderCart();
+    }
+
+    function checkout() {
+      if (Object.keys(cart).length === 0) {
+        alert("購物車是空的！");
+        return;
+      }
+      alert("請至櫃台結帳，感謝您的惠顧！");
+      cart = {};
+      localStorage.removeItem('cart');
+      renderCart();
+    }
+
+    renderCart();
+  </script>
+
+</body>
+</html>
