@@ -45,6 +45,10 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    textarea {
+      width: 90%;
+      resize: vertical;
+    }
   </style>
 </head>
 <body>
@@ -57,12 +61,11 @@
         <th>商品名稱</th>
         <th>數量</th>
         <th>小計</th>
-        <th>修改</th>
+        <th>備註 / 刪除</th>
+        <th>用餐方式</th>
       </tr>
     </thead>
-    <tbody id="cart-items">
-      <!-- JavaScript 插入 -->
-    </tbody>
+    <tbody id="cart-items"></tbody>
   </table>
 
   <div id="total-amount" style="margin-top:1rem; font-weight:bold;"></div>
@@ -77,7 +80,19 @@
       '加點冰淇淋': 30
     };
 
-    let cart = JSON.parse(localStorage.getItem('cart')) || {};
+    let raw = JSON.parse(localStorage.getItem('cart')) || {};
+    let cart = {};
+    for (let key in raw) {
+      if (typeof raw[key] === 'number') {
+        cart[key] = { qty: raw[key], note: '', dine: '內用' };
+      } else {
+        cart[key] = {
+          qty: raw[key].qty || 1,
+          note: raw[key].note || '',
+          dine: raw[key].dine || '內用'
+        };
+      }
+    }
 
     const tbody = document.getElementById('cart-items');
     const totalDisplay = document.getElementById('total-amount');
@@ -87,9 +102,9 @@
       let total = 0;
 
       for (const name in cart) {
-        const qty = cart[name];
+        const item = cart[name];
         const price = priceMap[name] || 0;
-        const subtotal = qty * price;
+        const subtotal = item.qty * price;
         total += subtotal;
 
         const row = document.createElement('tr');
@@ -97,12 +112,17 @@
           <td>${name}</td>
           <td>
             <button class="btn-minus" onclick="updateQty('${name}', -1)">-</button>
-            ${qty}
+            ${item.qty}
             <button class="btn-plus" onclick="updateQty('${name}', 1)">+</button>
           </td>
           <td>${subtotal} 元</td>
           <td>
+            <textarea rows="2" placeholder="例如：冰淇淋加在布朗尼上" onchange="updateNote('${name}', this.value)">${item.note}</textarea><br/>
             <button class="btn-delete" onclick="removeItem('${name}')">刪除</button>
+          </td>
+          <td>
+            <label><input type="radio" name="dine-${name}" value="內用" ${item.dine === '內用' ? 'checked' : ''} onchange="updateDine('${name}', '內用')"> 內用</label><br/>
+            <label><input type="radio" name="dine-${name}" value="外帶" ${item.dine === '外帶' ? 'checked' : ''} onchange="updateDine('${name}', '外帶')"> 外帶</label>
           </td>
         `;
         tbody.appendChild(row);
@@ -114,8 +134,8 @@
 
     function updateQty(name, change) {
       if (!cart[name]) return;
-      cart[name] += change;
-      if (cart[name] <= 0) delete cart[name];
+      cart[name].qty += change;
+      if (cart[name].qty <= 0) delete cart[name];
       renderCart();
     }
 
@@ -124,12 +144,36 @@
       renderCart();
     }
 
+    function updateNote(name, note) {
+      if (!cart[name]) return;
+      cart[name].note = note;
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function updateDine(name, dineOption) {
+      if (!cart[name]) return;
+      cart[name].dine = dineOption;
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
     function checkout() {
       if (Object.keys(cart).length === 0) {
         alert("購物車是空的！");
         return;
       }
-      alert("請至櫃台結帳，感謝您的惠顧！");
+
+      let receipt = "🧾 訂單明細：\n";
+      for (const name in cart) {
+        const item = cart[name];
+        receipt += `\n📌 ${name} x${item.qty}（${item.dine}）`;
+        if (item.note && item.note.trim() !== '') {
+          receipt += `\n　備註：${item.note.trim()}`;
+        }
+      }
+      receipt += `\n\n💰 總計：${totalDisplay.innerText}`;
+
+      alert(receipt);
+
       cart = {};
       localStorage.removeItem('cart');
       renderCart();
@@ -137,6 +181,5 @@
 
     renderCart();
   </script>
-
 </body>
 </html>
